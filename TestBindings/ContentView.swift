@@ -15,7 +15,7 @@ struct ContentView: View {
     let viewModel: ViewModel
 
     var body: some View {
-        VerticalPageView(viewModel.pages, currentPage: viewModel.$currentPage, tempStableId: viewModel.pages.first!.id) { page in
+        VerticalPageView(viewModel.pages, currentPage: viewModel.$currentPage) { page in
             Text("page \(page.name) - \(page.id.uuidString)")
         }
     }
