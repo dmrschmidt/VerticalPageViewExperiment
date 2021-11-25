@@ -20,18 +20,18 @@ struct VerticalPageView<Content: View, Data>: View where Data: RandomAccessColle
 
 struct VerticalPageViewControllerRepresentable<Content: View, Data>: UIViewControllerRepresentable where Data: RandomAccessCollection, Data.Element: Identifiable, Data.Index == Int {
     let data: Data
-    private let pages: [Content]
     @Binding private var currentPageId: Data.Element.ID
+    private let contentBuilder: (Data.Element) -> Content
 
-    init(_ data: Data, currentPage: Binding<Data.Element.ID>, contentBuilder: (Data.Element) -> Content) {
+    init(_ data: Data, currentPage: Binding<Data.Element.ID>, contentBuilder: @escaping (Data.Element) -> Content) {
         print("*** did create a new VerticalPageViewControllerRepresentable")
         self.data = data
-        pages = data.map { contentBuilder($0) }
+        self.contentBuilder = contentBuilder
         _currentPageId = currentPage
     }
 
     func makeCoordinator() -> Coordinator {
-        Coordinator(self)
+        Coordinator(data: data, currentPageId: $currentPageId, contentBuilder: contentBuilder)
     }
 
     func makeUIViewController(context: Context) -> UIPageViewController {
@@ -45,30 +45,40 @@ struct VerticalPageViewControllerRepresentable<Content: View, Data>: UIViewContr
     func updateUIViewController(_ pageViewController: UIPageViewController, context: Context) {
         print("*** \(#function)")
 
+        // we still need to compare against some "last known id" - formerly that 'stableId' - to tell when we must re-render new VCs
+        if data.first?.id != context.coordinator.lastKnownId {
+            context.coordinator.update(data: data, contentBuilder: contentBuilder)
+        }
         let currentPage = data.firstIndex { $0.id == currentPageId }!
         pageViewController.setViewControllers([context.coordinator.controllers[currentPage]], direction: .forward, animated: true)
     }
 
     class Coordinator: NSObject, UIPageViewControllerDataSource, UIPageViewControllerDelegate {
-        var tempStableId: Data.Element.ID? // since I don't know how to get the `.id()` ID
-
-        var parent: VerticalPageViewControllerRepresentable {
-            didSet {
-                recreateViewControllers()
-            }
-        }
-
+        private var data: Data
+        private var pages: [Content]
         private(set) var controllers = [UIViewController]()
+        var lastKnownId: Data.Element.ID? // since I don't know how to get the `.id()` ID
 
-        init(_ verticalPageViewControllerRepresentable: VerticalPageViewControllerRepresentable) {
-            print("*** did create a new Coordinator")
-            parent = verticalPageViewControllerRepresentable
+        @Binding private var currentPageId: Data.Element.ID
+
+        init(data: Data, currentPageId: Binding<Data.Element.ID>, contentBuilder: (Data.Element) -> Content) {
+            self.data = data
+            lastKnownId = data.first?.id
+            pages = data.map { contentBuilder($0) }
+            _currentPageId = currentPageId
             super.init()
+
             recreateViewControllers()
         }
 
-        func recreateViewControllers() {
-            controllers = parent.pages.map {
+        func update(data: Data, contentBuilder: (Data.Element) -> Content) {
+            self.data = data
+            pages = data.map { contentBuilder($0) }
+            recreateViewControllers()
+        }
+
+        private func recreateViewControllers() {
+            controllers = pages.map {
                 let viewController = UIHostingController(rootView: $0)
                 viewController.view.backgroundColor = .clear
                 return viewController
@@ -92,8 +102,8 @@ struct VerticalPageViewControllerRepresentable<Content: View, Data>: UIViewContr
 
         func pageViewController(_ pageViewController: UIPageViewController, didFinishAnimating finished: Bool, previousViewControllers: [UIViewController], transitionCompleted completed: Bool) {
             if completed, let visibleViewController = pageViewController.viewControllers?.first, let index = controllers.firstIndex(of: visibleViewController) {
-                print("*** \(#function) will change \(parent.currentPageId) to \(parent.data[index].id)")
-                parent.currentPageId = parent.data[index].id
+                print("*** \(#function) will change \(currentPageId) to \(data[index].id)")
+                currentPageId = data[index].id
             }
         }
     }
