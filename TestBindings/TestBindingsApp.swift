@@ -18,8 +18,8 @@ class MainViewModel2: ObservableObject {
 
         DispatchQueue.main.asyncAfter(deadline: .now()) {
             self.timer = Timer.scheduledTimer(withTimeInterval: 0.01, repeats: true) { timer in
-                print("will change progress")
-                self.progress = Float.random(in: 0...1)
+//                print("will change progress")
+//                self.progress = Float.random(in: 0...1)
             }
         }
     }
@@ -35,10 +35,13 @@ struct TestBindingsApp: App {
 
     var body: some Scene {
         WindowGroup {
-            ContentView(viewModel: ViewModel(
-                pages: TestBindingsApp.pages,
-                progress: $mainViewModel2.progress,
-                currentPage: $mainViewModel2.currentPage))
+            TabView {
+                ContentView(viewModel: ViewModel(
+                    pages: TestBindingsApp.pages,
+                    progress: $mainViewModel2.progress,
+                    currentPage: $mainViewModel2.currentPage))
+                ContentView2()
+            }
         }
     }
 }

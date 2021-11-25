@@ -1,20 +1,16 @@
 import SwiftUI
 
-struct ViewModel2 {
-    @Binding var value: Float
-    @Binding var value2: Float
-}
-
 struct ContentView2: View {
-    let viewModel: ViewModel2
+    @State var value1: Float = 0.5
+    @State var value2: Float = 0.4
 
     var body: some View {
         VStack(alignment: .leading) {
-            Text("value: \(viewModel.value)")
-            Text("value2: \(viewModel.value2)")
-            Slider(value: viewModel.$value, in: 0...1)
-            Slider(value: viewModel.$value2, in: 0...1).foregroundColor(Color.red)
-            SliderView(value: viewModel.$value)
+            Text("value: \(value1)")
+            Text("value2: \(value2)")
+            Slider(value: $value1, in: 0...1)
+            Slider(value: $value2, in: 0...1).foregroundColor(Color.red)
+            SliderView(value: $value1)
         }.padding()
     }
 }
@@ -112,7 +108,7 @@ class SliderViewController: UIViewController {
 #if DEBUG
     struct ContentView2_Previews: PreviewProvider {
         static var previews: some View {
-            ContentView2(viewModel: ViewModel2(value: .constant(0.2), value2: .constant(0.4)))
+            ContentView2()
         }
     }
 #endif
