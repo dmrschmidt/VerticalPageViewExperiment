@@ -1,5 +1,6 @@
 import SwiftUI
 import Combine
+import AVFoundation
 
 class MainViewModel: ObservableObject {
     @Published var value1: Float = 0.5
@@ -11,16 +12,27 @@ class MainViewModel2: ObservableObject {
     @Published var progress: Float
 
     private var timer: Timer?
+    private let player: AVPlayer
 
     init(currentPage: UUID) {
         self.currentPage = currentPage
         self.progress = 0
+        self.player = AVPlayer(url: Bundle(for: MainViewModel2.self).url(forResource: "example_sound", withExtension: "wav")!)
+
+        let timeScale = CMTimeScale(NSEC_PER_SEC)
+        let interval = CMTime(seconds: 0.05, preferredTimescale: timeScale)
+        self.player.addPeriodicTimeObserver(forInterval: interval, queue: .main) { time in
+            self.handlePlaybackTimeChange(time: time, player: self.player)
+        }
 
         DispatchQueue.main.asyncAfter(deadline: .now()) {
-            self.timer = Timer.scheduledTimer(withTimeInterval: 0.01, repeats: true) { timer in
-//                print("will change progress")
-//                self.progress = Float.random(in: 0...1)
-            }
+            self.player.play()
+        }
+    }
+
+    func handlePlaybackTimeChange(time: CMTime, player: AVPlayer) {
+        DispatchQueue.main.async {
+            self.progress = Float(time.seconds) / 30.0
         }
     }
 }

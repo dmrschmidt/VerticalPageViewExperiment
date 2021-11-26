@@ -15,6 +15,13 @@ struct ContentView: View {
     let viewModel: ViewModel
 
     var body: some View {
+        ZStack {
+            backgroundView
+            Text("progress: \(viewModel.progress)")
+        }
+    }
+
+    private var backgroundView: some View {
         VerticalPageView(viewModel.pages, currentPage: viewModel.$currentPage) { page in
             Text("page \(page.name) - \(page.id.uuidString)")
         }
