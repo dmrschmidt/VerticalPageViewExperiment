@@ -1,6 +1,6 @@
 import SwiftUI
 
-struct ContentView2: View {
+struct SliderExperimentView: View {
     @State var value1: Float = 0.5
     @State var value2: Float = 0.4
 
@@ -108,7 +108,7 @@ class SliderViewController: UIViewController {
 #if DEBUG
     struct ContentView2_Previews: PreviewProvider {
         static var previews: some View {
-            ContentView2()
+            SliderExperimentView()
         }
     }
 #endif

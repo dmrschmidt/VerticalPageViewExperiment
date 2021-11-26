@@ -2,16 +2,13 @@ import SwiftUI
 import Combine
 import AVFoundation
 
-class MainViewModel: ObservableObject {
-    @Published var value1: Float = 0.5
-    @Published var value2: Float = 0.4
-}
+class PageViewModel: ObservableObject {
+    static var pages = (1...10).map { Content(name: String($0)) }
 
-class MainViewModel2: ObservableObject {
     @Published var currentPage: UUID
-    var app: TestBindingsApp?
+
     var pages: [Content] {
-        TestBindingsApp.pages
+        PageViewModel.pages
     }
 
     init(currentPage: UUID) {
@@ -25,17 +22,18 @@ class ProgressViewModel: ObservableObject {
     private let player: AVPlayer
 
     init() {
-        self.player = AVPlayer(url: Bundle(for: MainViewModel2.self).url(forResource: "example_sound", withExtension: "wav")!)
+        self.player = AVPlayer(url: Bundle(for: Self.self).url(forResource: "example_sound", withExtension: "wav")!)
+        startPlayerAndProgressObservations()
+    }
 
+    func startPlayerAndProgressObservations() {
         let timeScale = CMTimeScale(NSEC_PER_SEC)
         let interval = CMTime(seconds: 0.05, preferredTimescale: timeScale)
         self.player.addPeriodicTimeObserver(forInterval: interval, queue: .main) { time in
             self.handlePlaybackTimeChange(time: time, player: self.player)
         }
 
-        DispatchQueue.main.asyncAfter(deadline: .now()) {
-            self.player.play()
-        }
+        self.player.play()
     }
 
     func handlePlaybackTimeChange(time: CMTime, player: AVPlayer) {
@@ -47,25 +45,20 @@ class ProgressViewModel: ObservableObject {
 
 @main
 struct TestBindingsApp: App {
-    static var pages = (1...10).map { Content(name: String($0)) }
-    @ObservedObject var mainViewModel = MainViewModel()
-    @ObservedObject var mainViewModel2: MainViewModel2 = {
-        MainViewModel2(currentPage: TestBindingsApp.pages.first!.id)
+    @ObservedObject var pageViewModel: PageViewModel = {
+        PageViewModel(currentPage: PageViewModel.pages.first!.id)
     }()
-    @ObservedObject var progressViewModel = ProgressViewModel()
 
-    init() {
-        mainViewModel2.app = self
-    }
+    @ObservedObject var progressViewModel = ProgressViewModel()
 
     var body: some Scene {
         WindowGroup {
             TabView {
-                ContentView(
-                    pageViewModel: mainViewModel2,
+                VerticalPageExperimentView(
+                    pageViewModel: pageViewModel,
                     progressViewModel: progressViewModel
                 )
-                ContentView2()
+                SliderExperimentView()
             }
         }
     }
