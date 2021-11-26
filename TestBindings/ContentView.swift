@@ -7,27 +7,43 @@ struct Content: Identifiable {
 
 struct ViewModel {
     var pages: [Content]
-    @Binding var progress: Float
+    @Binding var currentPage: UUID
+}
+
+struct PageViewModel {
+    var pages: [Content]
     @Binding var currentPage: UUID
 }
 
 struct ContentView: View {
-    let viewModel: ViewModel
+    var pageViewModel: MainViewModel2
+    var progressViewModel: ProgressViewModel
 
     var body: some View {
         ZStack {
-            backgroundView
-            Text("progress: \(viewModel.progress)")
-        }
-    }
-
-    private var backgroundView: some View {
-        VerticalPageView(viewModel.pages, currentPage: viewModel.$currentPage) { page in
-            Text("page \(page.name) - \(page.id.uuidString)")
+            SillyViewWrapper(viewModel: pageViewModel)
+            OtherSillyViewWrapper(viewModel: progressViewModel)
         }
     }
 }
 
+struct OtherSillyViewWrapper: View {
+    @StateObject var viewModel: ProgressViewModel
+
+    var body: some View {
+        Text("progress: \(viewModel.progress)")
+    }
+}
+
+struct SillyViewWrapper: View {
+    @StateObject var viewModel: MainViewModel2
+
+    var body: some View {
+        VerticalPageView(viewModel.pages, currentPage: $viewModel.currentPage) { page in
+            Text("page \(page.name) - \(page.id.uuidString)")
+        }
+    }
+}
 #if DEBUG
 //    struct ContentView_Previews: PreviewProvider {
 //        static var previews: some View {

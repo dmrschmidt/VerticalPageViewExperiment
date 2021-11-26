@@ -43,10 +43,14 @@ struct VerticalPageViewControllerRepresentable<Content: View, Data>: UIViewContr
     }
 
     func updateUIViewController(_ pageViewController: UIPageViewController, context: Context) {
-        print("*** \(#function)")
-
         let currentPage = data.firstIndex { $0.id == currentPageId }!
-        pageViewController.setViewControllers([context.coordinator.controllers[currentPage]], direction: .forward, animated: true)
+        let viewControllers = pageViewController.viewControllers
+        if viewControllers != [context.coordinator.controllers[currentPage]] {
+            print("*** \(#function)")
+
+            let currentPage = data.firstIndex { $0.id == currentPageId }!
+            pageViewController.setViewControllers([context.coordinator.controllers[currentPage]], direction: .forward, animated: true)
+        }
     }
 
     class Coordinator: NSObject, UIPageViewControllerDataSource, UIPageViewControllerDelegate {

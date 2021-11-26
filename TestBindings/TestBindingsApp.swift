@@ -9,14 +9,22 @@ class MainViewModel: ObservableObject {
 
 class MainViewModel2: ObservableObject {
     @Published var currentPage: UUID
-    @Published var progress: Float
-
-    private var timer: Timer?
-    private let player: AVPlayer
+    var app: TestBindingsApp?
+    var pages: [Content] {
+        TestBindingsApp.pages
+    }
 
     init(currentPage: UUID) {
         self.currentPage = currentPage
-        self.progress = 0
+    }
+}
+
+class ProgressViewModel: ObservableObject {
+    @Published var progress: Float = 0
+
+    private let player: AVPlayer
+
+    init() {
         self.player = AVPlayer(url: Bundle(for: MainViewModel2.self).url(forResource: "example_sound", withExtension: "wav")!)
 
         let timeScale = CMTimeScale(NSEC_PER_SEC)
@@ -44,14 +52,19 @@ struct TestBindingsApp: App {
     @ObservedObject var mainViewModel2: MainViewModel2 = {
         MainViewModel2(currentPage: TestBindingsApp.pages.first!.id)
     }()
+    @ObservedObject var progressViewModel = ProgressViewModel()
+
+    init() {
+        mainViewModel2.app = self
+    }
 
     var body: some Scene {
         WindowGroup {
             TabView {
-                ContentView(viewModel: ViewModel(
-                    pages: TestBindingsApp.pages,
-                    progress: $mainViewModel2.progress,
-                    currentPage: $mainViewModel2.currentPage))
+                ContentView(
+                    pageViewModel: mainViewModel2,
+                    progressViewModel: progressViewModel
+                )
                 ContentView2()
             }
         }
